@@ -12,8 +12,14 @@ def pre_process_images(X: np.ndarray):
     """
     assert X.shape[1] == 784,\
         f"X.shape[1]: {X.shape[1]}, should be 784"
-    # TODO implement this function (Task 2a)
-    return X
+
+    X = X / 127.5  # Set to range [0-2]
+    X -= 1  # Set to range [-1, 1]
+
+    X_with_bias = np.ones((X.shape[0], X.shape[1] + 1))
+    X_with_bias[:, :-1] = X
+
+    return X_with_bias
 
 
 def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray) -> float:
@@ -24,17 +30,24 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray) -> float:
     Returns:
         Cross entropy error (float)
     """
-    # TODO implement this function (Task 2a)
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
-    return 0
+
+    batch_size = targets.shape[0]
+    loss = np.zeros(batch_size)
+    for i in range(batch_size):
+        y = targets[i, 0]
+        y_hat = outputs[i, 0]
+        loss[i] = -(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
+
+    return np.average(loss)
 
 
 class BinaryModel:
 
     def __init__(self):
         # Define number of input nodes
-        self.I = None
+        self.I = 28 * 28 + 1
         self.w = np.zeros((self.I, 1))
         self.grad = None
 
@@ -45,8 +58,13 @@ class BinaryModel:
         Returns:
             y: output of model with shape [batch size, 1]
         """
-        # TODO implement this function (Task 2a)
-        return None
+        batch_size = X.shape[0]
+        output = np.zeros((batch_size, 1))
+        for i in range(batch_size):
+            e = self.w[:, 0].dot(X[i, :])
+            output[i, 0] = 1 / (1 + np.exp(-e))
+
+        return output
 
     def backward(self, X: np.ndarray, outputs: np.ndarray, targets: np.ndarray) -> None:
         """
@@ -56,12 +74,20 @@ class BinaryModel:
             outputs: outputs of model of shape: [batch size, 1]
             targets: labels/targets of each image of shape: [batch size, 1]
         """
-        # TODO implement this function (Task 2a)
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
         self.grad = np.zeros_like(self.w)
         assert self.grad.shape == self.w.shape,\
             f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
+
+        batch_size = X.shape[0]
+        gradients = np.zeros(X.shape)
+        for i in range(batch_size):
+            y = targets[i, 0]
+            y_hat = outputs[i, 0]
+            gradients[i] = - (y - y_hat) * X[i]
+
+        self.grad[:, 0] = gradients.mean(axis=0)
 
     def zero_grad(self) -> None:
         self.grad = None
@@ -72,7 +98,8 @@ def gradient_approximation_test(model: BinaryModel, X: np.ndarray, Y: np.ndarray
         Numerical approximation for gradients. Should not be edited. 
         Details about this test is given in the appendix in the assignment.
     """
-    w_orig = np.random.normal(loc=0, scale=1/model.w.shape[0]**2, size=model.w.shape)
+    w_orig = np.random.normal(
+        loc=0, scale=1/model.w.shape[0]**2, size=model.w.shape)
     epsilon = 1e-3
     for i in range(w_orig.shape[0]):
         model.w = w_orig.copy()
@@ -100,8 +127,10 @@ if __name__ == "__main__":
     category1, category2 = 2, 3
     X_train, Y_train, *_ = utils.load_binary_dataset(category1, category2)
     X_train = pre_process_images(X_train)
-    assert X_train.max() <= 1.0, f"The images (X_train) should be normalized to the range [-1, 1]"
-    assert X_train.min() < 0 and X_train.min() >= -1, f"The images (X_train) should be normalized to the range [-1, 1]"
+    assert X_train.max(
+    ) <= 1.0, f"The images (X_train) should be normalized to the range [-1, 1]"
+    assert X_train.min() < 0 and X_train.min() >= - \
+        1, f"The images (X_train) should be normalized to the range [-1, 1]"
     assert X_train.shape[1] == 785,\
         f"Expected X_train to have 785 elements per image. Shape was: {X_train.shape}"
 
