@@ -1,3 +1,5 @@
+import time
+import timeit
 import numpy as np
 import utils
 from task2a import pre_process_images
@@ -12,20 +14,22 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     Returns:
         Cross entropy error (float)
     """
-    # TODO implement this function (Task 3a)
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
-    raise NotImplementedError
+
+    batch_size, num_classes = targets.shape
+    loss = - np.sum(targets * np.log(outputs), axis=1)
+    return np.average(loss)
 
 
 class SoftmaxModel:
 
     def __init__(self, l2_reg_lambda: float):
         # Define number of input nodes
-        self.I = None
+        self.I = 28 * 28 + 1
 
         # Define number of output nodes
-        self.num_outputs = None
+        self.num_outputs = 10
         self.w = np.zeros((self.I, self.num_outputs))
         self.grad = None
 
@@ -38,8 +42,15 @@ class SoftmaxModel:
         Returns:
             y: output of model with shape [batch size, num_outputs]
         """
-        # TODO implement this function (Task 3a)
-        return None
+        batch_size = X.shape[0]
+        output = np.zeros((batch_size, self.num_outputs))
+        for i in range(batch_size):
+            zk = np.transpose(self.w).dot(X[i, :])
+            ezk_values = np.exp(zk)
+            ezk_sum = sum(ezk_values)
+            output[i] = ezk_values / ezk_sum
+
+        return output
 
     def backward(self, X: np.ndarray, outputs: np.ndarray, targets: np.ndarray) -> None:
         """
@@ -50,14 +61,24 @@ class SoftmaxModel:
             outputs: outputs of model of shape: [batch size, num_outputs]
             targets: labels/targets of each image of shape: [batch size, num_classes]
         """
-        # TODO implement this function (Task 3a)
-        # To implement L2 regularization task (4b) you can get the lambda value in self.l2_reg_lambda 
+        # To implement L2 regularization task (4b) you can get the lambda value in self.l2_reg_lambda
         # which is defined in the constructor.
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
         self.grad = np.zeros_like(self.w)
         assert self.grad.shape == self.w.shape,\
-             f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
+            f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
+
+        batch_size = X.shape[0]
+        gradients = np.zeros((self.num_outputs, X.shape[0], X.shape[1]))
+        for i in range(batch_size):
+            for k in range(self.num_outputs):
+                y = targets[i, k]
+                y_hat = outputs[i, k]
+                gradients[k, i] = - X[i] * (y - y_hat)
+
+        for k in range(self.num_outputs):
+            self.grad[:, k] = gradients[k].mean(axis=0)
 
     def zero_grad(self) -> None:
         self.grad = None
@@ -71,7 +92,11 @@ def one_hot_encode(Y: np.ndarray, num_classes: int):
     Returns:
         Y: shape [Num examples, num classes]
     """
-    raise NotImplementedError
+    output = np.zeros((Y.shape[0], num_classes))
+    numbers = Y[:, 0]
+    indexes = np.arange(Y.shape[0])
+    output[indexes, numbers] = 1
+    return output
 
 
 def gradient_approximation_test(model: SoftmaxModel, X: np.ndarray, Y: np.ndarray):
@@ -79,7 +104,8 @@ def gradient_approximation_test(model: SoftmaxModel, X: np.ndarray, Y: np.ndarra
         Numerical approximation for gradients. Should not be edited. 
         Details about this test is given in the appendix in the assignment.
     """
-    w_orig = np.random.normal(loc=0, scale=1/model.w.shape[0]**2, size=model.w.shape)
+    w_orig = np.random.normal(
+        loc=0, scale=1/model.w.shape[0]**2, size=model.w.shape)
 
     epsilon = 1e-3
     for i in range(model.w.shape[0]):
