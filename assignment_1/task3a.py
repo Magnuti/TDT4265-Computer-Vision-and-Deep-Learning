@@ -17,7 +17,6 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
 
-    batch_size, num_classes = targets.shape
     loss = - np.sum(targets * np.log(outputs), axis=1)
     return np.average(loss)
 
@@ -42,15 +41,14 @@ class SoftmaxModel:
         Returns:
             y: output of model with shape [batch size, num_outputs]
         """
-        batch_size = X.shape[0]
-        output = np.zeros((batch_size, self.num_outputs))
-        for i in range(batch_size):
-            zk = np.transpose(self.w).dot(X[i, :])
-            ezk_values = np.exp(zk)
-            ezk_sum = sum(ezk_values)
-            output[i] = ezk_values / ezk_sum
 
-        return output
+        z = np.matmul(X, self.w)  # Shape (batch size, num_outputs)
+        exp = np.exp(z)  # Shape (batch size, num_outputs)
+        exp_sum_per_output = np.sum(exp, axis=1)  # Shape (batch size, )
+        exp_sum_per_output = exp_sum_per_output.reshape(
+            X.shape[0], 1)  # Shape (batch size, 1)
+
+        return exp / exp_sum_per_output
 
     def backward(self, X: np.ndarray, outputs: np.ndarray, targets: np.ndarray) -> None:
         """
@@ -69,16 +67,10 @@ class SoftmaxModel:
         assert self.grad.shape == self.w.shape,\
             f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
 
+        # Divide by batch_size to get the average gradient because the matrix multiplication sums them together.
         batch_size = X.shape[0]
-        gradients = np.zeros((self.num_outputs, X.shape[0], X.shape[1]))
-        for i in range(batch_size):
-            for k in range(self.num_outputs):
-                y = targets[i, k]
-                y_hat = outputs[i, k]
-                gradients[k, i] = - X[i] * (y - y_hat)
-
-        for k in range(self.num_outputs):
-            self.grad[:, k] = gradients[k].mean(axis=0)
+        self.grad = - np.matmul(X.T, (targets - outputs)) / \
+            batch_size + self.l2_reg_lambda * self.w
 
     def zero_grad(self) -> None:
         self.grad = None
@@ -101,7 +93,7 @@ def one_hot_encode(Y: np.ndarray, num_classes: int):
 
 def gradient_approximation_test(model: SoftmaxModel, X: np.ndarray, Y: np.ndarray):
     """
-        Numerical approximation for gradients. Should not be edited. 
+        Numerical approximation for gradients. Should not be edited.
         Details about this test is given in the appendix in the assignment.
     """
     w_orig = np.random.normal(
