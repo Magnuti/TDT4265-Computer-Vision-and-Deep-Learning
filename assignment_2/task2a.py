@@ -13,8 +13,18 @@ def pre_process_images(X: np.ndarray):
     """
     assert X.shape[1] == 784,\
         f"X.shape[1]: {X.shape[1]}, should be 784"
-    # TODO implement this function (Task 2a)
-    return X
+
+    mean = X.mean()
+    std = np.std(X)
+
+    # Normalize
+    X = (X - mean) / std
+
+    # Bias trick
+    X_with_bias = np.ones((X.shape[0], X.shape[1] + 1))
+    X_with_bias[:, :-1] = X
+
+    return X_with_bias
 
 
 def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
@@ -27,8 +37,17 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     """
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
-    # TODO: Implement this function (copy from last assignment)
-    raise NotImplementedError
+
+    loss = - np.sum(targets * np.log(outputs), axis=1)
+    return np.average(loss)
+
+
+def sigmoid(x: np.ndarray) -> np.ndarray:
+    return 1 / (1 + np.exp(-x))
+
+
+def sigmoid_derivative(x: np.ndarray) -> np.ndarray:
+    return sigmoid(x) * (1 - sigmoid(x))
 
 
 class SoftmaxModel:
@@ -42,7 +61,7 @@ class SoftmaxModel:
         # Always reset random seed before weight init to get comparable results.
         np.random.seed(1)
         # Define number of input nodes
-        self.I = None
+        self.I = 28 * 28 + 1
         self.use_improved_sigmoid = use_improved_sigmoid
 
         # Define number of output nodes
@@ -56,7 +75,7 @@ class SoftmaxModel:
         for size in self.neurons_per_layer:
             w_shape = (prev, size)
             print("Initializing weight to shape:", w_shape)
-            w = np.zeros(w_shape)
+            w = np.random.uniform(-1, 1, w_shape)
             self.ws.append(w)
             prev = size
         self.grads = [None for i in range(len(self.ws))]
@@ -68,10 +87,25 @@ class SoftmaxModel:
         Returns:
             y: output of model with shape [batch size, num_outputs]
         """
-        # TODO implement this function (Task 2b)
-        # HINT: For peforming the backward pass, you can save intermediate activations in varialbes in the forward pass.
-        # such as self.hidden_layer_ouput = ...
-        return None
+
+        self.activations = []
+        for i, weights in enumerate(self.ws):
+            z = np.matmul(X, weights)  # Shape (batch size, num_outputs)
+            if i < len(self.ws) - 1:
+                # Sigmoid on the hidden layers
+                X = sigmoid(z)
+            else:
+                # SoftMax as last layer
+                exp = np.exp(z)  # Shape (batch size, num_outputs)
+                exp_sum_per_output = np.sum(
+                    exp, axis=1)  # Shape (batch size, )
+                exp_sum_per_output = exp_sum_per_output.reshape(
+                    X.shape[0], 1)  # Shape (batch size, 1)
+                X = exp / exp_sum_per_output
+
+            self.activations.append(X)
+
+        return X
 
     def backward(self, X: np.ndarray, outputs: np.ndarray,
                  targets: np.ndarray) -> None:
@@ -88,7 +122,19 @@ class SoftmaxModel:
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
         # A list of gradients.
         # For example, self.grads[0] will be the gradient for the first hidden layer
-        self.grads = []
+        self.zero_grad()
+
+        batch_size = X.shape[0]
+
+        # From assignment 1
+        delta_1 = targets - outputs
+        self.grads[1] = - np.matmul(self.activations[0].T,
+                                    delta_1) / batch_size
+
+        activation_gradient = sigmoid_derivative(np.matmul(X, self.ws[0]))
+        delta_0 = np.matmul(-delta_1, self.ws[1].T) * activation_gradient
+
+        self.grads[0] = np.matmul(X.T, delta_0) / batch_size
 
         for grad, w in zip(self.grads, self.ws):
             assert grad.shape == w.shape,\
@@ -106,8 +152,11 @@ def one_hot_encode(Y: np.ndarray, num_classes: int):
     Returns:
         Y: shape [Num examples, num classes]
     """
-    # TODO: Implement this function (copy from last assignment)
-    raise NotImplementedError
+    output = np.zeros((Y.shape[0], num_classes))
+    numbers = Y[:, 0]
+    indexes = np.arange(Y.shape[0])
+    output[indexes, numbers] = 1
+    return output
 
 
 def gradient_approximation_test(

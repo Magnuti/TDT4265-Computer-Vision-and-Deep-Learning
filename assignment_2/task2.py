@@ -15,8 +15,17 @@ def calculate_accuracy(X: np.ndarray, targets: np.ndarray, model: SoftmaxModel) 
     Returns:
         Accuracy (float)
     """
-    # TODO: Implement this function (copy from last assignment)
-    accuracy = 0
+    outputs = model.forward(X)
+    batch_size = X.shape[0]
+    correct_predictions = 0
+    for i in range(batch_size):
+        output_array = outputs[i]
+        target_array = targets[i]
+        output_index = np.argmax(output_array)
+        target_index = np.argmax(target_array)
+        if(output_index == target_index):
+            correct_predictions += 1
+    accuracy = correct_predictions / batch_size
     return accuracy
 
 
@@ -46,12 +55,13 @@ class SoftmaxTrainer(BaseTrainer):
         Returns:
             loss value (float) on batch
         """
-        # TODO: Implement this function (task 2c)
+        logits = self.model.forward(X_batch)
+        loss = cross_entropy_loss(Y_batch, logits)
+        self.model.backward(X_batch, logits, Y_batch)
 
-        loss = 0
-
-        loss = cross_entropy_loss(Y_batch, logits)  # sol
-
+        # Since self.grads is a list we loop over it and apply the gradient update step to each layer
+        for i, gradients in enumerate(self.model.grads):
+            self.model.ws[i] -= self.learning_rate * gradients
         return loss
 
     def validation_step(self):
@@ -136,3 +146,5 @@ if __name__ == "__main__":
     plt.ylabel("Accuracy")
     plt.legend()
     plt.savefig("task2c_train_loss.png")
+
+    plt.show()
