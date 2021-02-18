@@ -4,7 +4,7 @@ import typing
 np.random.seed(1)
 
 
-def pre_process_images(X: np.ndarray):
+def pre_process_training_images(X: np.ndarray):
     """
     Args:
         X: images of shape [batch size, 784] in the range (0, 255)
@@ -16,6 +16,30 @@ def pre_process_images(X: np.ndarray):
 
     mean = X.mean()
     std = np.std(X)
+
+    # Normalize
+    X = (X - mean) / std
+
+    # Bias trick
+    X_with_bias = np.ones((X.shape[0], X.shape[1] + 1))
+    X_with_bias[:, :-1] = X
+
+    return X_with_bias, mean, std
+
+
+def pre_process_non_training_images(X: np.ndarray, mean: float, std: float):
+    """
+    Helper function to normalize the validation/test data since we must
+    normalize with the mean and standard validation from the training data.
+    Args:
+        X: images of shape [batch size, 784] in the range (0, 255)
+        mean: average value of the training data
+        stf: standard deviation of the training data
+    Returns:
+        X: images of shape [batch size, 785] normalized as described in task2a
+    """
+    assert X.shape[1] == 784,\
+        f"X.shape[1]: {X.shape[1]}, should be 784"
 
     # Normalize
     X = (X - mean) / std
@@ -200,7 +224,7 @@ if __name__ == "__main__":
         f"Expected the vector to be [0,0,0,1,0,0,0,0,0,0], but got {Y}"
 
     X_train, Y_train, *_ = utils.load_full_mnist()
-    X_train = pre_process_images(X_train)
+    X_train, mean, std = pre_process_training_images(X_train)
     Y_train = one_hot_encode(Y_train, 10)
     assert X_train.shape[1] == 785,\
         f"Expected X_train to have 785 elements per image. Shape was: {X_train.shape}"

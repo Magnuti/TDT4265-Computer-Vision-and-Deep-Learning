@@ -1,7 +1,7 @@
 import numpy as np
 import utils
 import matplotlib.pyplot as plt
-from task2a import cross_entropy_loss, SoftmaxModel, one_hot_encode, pre_process_images
+from task2a import cross_entropy_loss, SoftmaxModel, one_hot_encode, pre_process_training_images, pre_process_non_training_images
 from trainer import BaseTrainer
 np.random.seed(0)
 
@@ -103,8 +103,8 @@ if __name__ == "__main__":
 
     # Load dataset
     X_train, Y_train, X_val, Y_val = utils.load_full_mnist()
-    X_train = pre_process_images(X_train)
-    X_val = pre_process_images(X_val)
+    X_train, mean, std = pre_process_training_images(X_train)
+    X_val = pre_process_non_training_images(X_val, mean, std)
     Y_train = one_hot_encode(Y_train, 10)
     Y_val = one_hot_encode(Y_val, 10)
     # Hyperparameters
