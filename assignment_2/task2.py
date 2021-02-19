@@ -62,9 +62,9 @@ class SoftmaxTrainer(BaseTrainer):
         # Since self.grads is a list we loop over it and apply the gradient update step to each layer
         for i, gradients in enumerate(self.model.grads):
             if self.use_momentum:
-                self.model.ws[i] -= self.learning_rate * \
-                    (gradients + self.momentum_gamma * self.previous_grads[i])
-                self.previous_grads[i] = gradients
+                self.model.ws[i] -= self.learning_rate * self.previous_grads[i]
+                self.previous_grads[i] = gradients + \
+                    self.momentum_gamma * self.previous_grads[i]
             else:
                 self.model.ws[i] -= self.learning_rate * gradients
 
