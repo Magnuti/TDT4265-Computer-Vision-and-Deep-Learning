@@ -67,6 +67,8 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
 
 
 def sigmoid(x: np.ndarray) -> np.ndarray:
+    # Clip to avoid numpy overflow
+    x = np.clip(x, -500, 500)
     return 1 / (1 + np.exp(-x))
 
 
@@ -79,7 +81,9 @@ def improved_sigmoid(x: np.ndarray) -> np.ndarray:
 
 
 def improved_sigmoid_derivative(x: np.ndarray) -> np.ndarray:
-    return 1.14393 / ((np.cosh((2 / 3) * x)) ** 2)
+    # return 1.14393 / ((np.cosh((2 / 3) * x)) ** 2)
+    # Taken from Piazza as my formula above leads to numpy overflow
+    return 1.7159 * (2 / 3) * (1 - np.tanh(2 * x / 3)**2)
 
 
 class SoftmaxModel:
@@ -125,6 +129,7 @@ class SoftmaxModel:
         """
 
         self.activations = []
+        self.weighted_inputs = []
         for i, weights in enumerate(self.ws):
             z = np.matmul(X, weights)  # Shape (batch size, num_outputs)
             if i < len(self.ws) - 1:
@@ -139,6 +144,7 @@ class SoftmaxModel:
                     X.shape[0], 1)  # Shape (batch size, 1)
                 X = exp / exp_sum_per_output
 
+            self.weighted_inputs.append(z)
             self.activations.append(X)
 
         return X
@@ -153,7 +159,6 @@ class SoftmaxModel:
             outputs: outputs of model of shape: [batch size, num_outputs]
             targets: labels/targets of each image of shape: [batch size, num_classes]
         """
-        # TODO implement this function (Task 2b)
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
         # A list of gradients.
@@ -162,20 +167,21 @@ class SoftmaxModel:
 
         batch_size = X.shape[0]
 
-        # From assignment 1
-        delta_1 = targets - outputs
-        self.grads[1] = - np.matmul(self.activations[0].T,
-                                    delta_1) / batch_size
+        error = - (targets - outputs)  # Initial error based on the target
+        for i in range(len(self.grads) - 1, 0, -1):
+            self.grads[i] = np.matmul(
+                self.activations[i - 1].T, error) / batch_size
 
-        if self.use_improved_sigmoid:
-            activation_gradient = improved_sigmoid_derivative(
-                np.matmul(X, self.ws[0]))
-        else:
-            activation_gradient = sigmoid_derivative(np.matmul(X, self.ws[0]))
+            if self.use_improved_sigmoid:
+                activation_gradient = improved_sigmoid_derivative(
+                    self.weighted_inputs[i - 1])
+            else:
+                activation_gradient = sigmoid_derivative(
+                    self.weighted_inputs[i - 1])
 
-        delta_0 = np.matmul(-delta_1, self.ws[1].T) * activation_gradient
+            error = np.matmul(error, self.ws[i].T) * activation_gradient
 
-        self.grads[0] = np.matmul(X.T, delta_0) / batch_size
+        self.grads[0] = np.matmul(X.T, error) / batch_size
 
         for grad, w in zip(self.grads, self.ws):
             assert grad.shape == w.shape,\
