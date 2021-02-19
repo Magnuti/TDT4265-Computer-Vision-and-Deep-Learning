@@ -71,11 +71,10 @@ def plot_loss(loss_dict: dict, label: str = None, npoints_to_average=1, plot_var
     """
     global_steps = list(loss_dict.keys())
     loss = list(loss_dict.values())
-    if npoints_to_average == 1 or not plot_variance:
+    if npoints_to_average == 1:
         plt.plot(global_steps, loss, label=label)
         return
 
-    npoints_to_average = 10
     num_points = len(loss) // npoints_to_average
     mean_loss = []
     loss_std = []
@@ -88,7 +87,9 @@ def plot_loss(loss_dict: dict, label: str = None, npoints_to_average=1, plot_var
         steps.append(step)
     plt.plot(steps, mean_loss,
              label=f"{label} (mean over {npoints_to_average} steps)")
-    plt.fill_between(
-        steps, np.array(mean_loss) -
-        np.array(loss_std), np.array(mean_loss) + loss_std,
-        alpha=.2, label=f"{label} variance over {npoints_to_average} steps")
+
+    if plot_variance:
+        plt.fill_between(
+            steps, np.array(mean_loss) -
+            np.array(loss_std), np.array(mean_loss) + loss_std,
+            alpha=.2, label=f"{label} variance over {npoints_to_average} steps")

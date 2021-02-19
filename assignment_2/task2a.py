@@ -74,6 +74,14 @@ def sigmoid_derivative(x: np.ndarray) -> np.ndarray:
     return sigmoid(x) * (1 - sigmoid(x))
 
 
+def improved_sigmoid(x: np.ndarray) -> np.ndarray:
+    return 1.7159 * np.tanh((2 / 3) * x)
+
+
+def improved_sigmoid_derivative(x: np.ndarray) -> np.ndarray:
+    return 1.14393 / ((np.cosh((2 / 3) * x)) ** 2)
+
+
 class SoftmaxModel:
 
     def __init__(self,
@@ -99,7 +107,11 @@ class SoftmaxModel:
         for size in self.neurons_per_layer:
             w_shape = (prev, size)
             print("Initializing weight to shape:", w_shape)
-            w = np.random.uniform(-1, 1, w_shape)
+            if use_improved_weight_init:
+                std = 1 / np.sqrt(prev)
+                w = np.random.normal(0, std, w_shape)
+            else:
+                w = np.random.uniform(-1, 1, w_shape)
             self.ws.append(w)
             prev = size
         self.grads = [None for i in range(len(self.ws))]
@@ -155,7 +167,12 @@ class SoftmaxModel:
         self.grads[1] = - np.matmul(self.activations[0].T,
                                     delta_1) / batch_size
 
-        activation_gradient = sigmoid_derivative(np.matmul(X, self.ws[0]))
+        if self.use_improved_sigmoid:
+            activation_gradient = improved_sigmoid_derivative(
+                np.matmul(X, self.ws[0]))
+        else:
+            activation_gradient = sigmoid_derivative(np.matmul(X, self.ws[0]))
+
         delta_0 = np.matmul(-delta_1, self.ws[1].T) * activation_gradient
 
         self.grads[0] = np.matmul(X.T, delta_0) / batch_size

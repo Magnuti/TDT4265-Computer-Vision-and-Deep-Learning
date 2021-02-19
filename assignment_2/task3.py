@@ -35,33 +35,117 @@ if __name__ == "__main__":
     )
     train_history, val_history = trainer.train(num_epochs)
 
-    # Example created in assignment text - Comparing with and without shuffling.
-    # YOU CAN DELETE EVERYTHING BELOW!
-    shuffle_data = False
-    model_no_shuffle = SoftmaxModel(
+    use_improved_weight_init = True
+
+    model_improved_weights = SoftmaxModel(
         neurons_per_layer,
         use_improved_sigmoid,
         use_improved_weight_init)
-    trainer_shuffle = SoftmaxTrainer(
+    trainer_improved_weights = SoftmaxTrainer(
         momentum_gamma, use_momentum,
-        model_no_shuffle, learning_rate, batch_size, shuffle_data,
+        model_improved_weights, learning_rate, batch_size, shuffle_data,
         X_train, Y_train, X_val, Y_val,
     )
-    train_history_no_shuffle, val_history_no_shuffle = trainer_shuffle.train(
+    train_history_improved_weights, val_history_improved_weights = trainer_improved_weights.train(
         num_epochs)
-    shuffle_data = True
 
-    plt.subplot(1, 2, 1)
-    utils.plot_loss(train_history["loss"],
-                    "Task 2 Model", npoints_to_average=10)
-    utils.plot_loss(
-        train_history_no_shuffle["loss"], "Task 2 Model - No dataset shuffling", npoints_to_average=10)
+    use_improved_sigmoid = True
+
+    model_improved_sigmoid = SoftmaxModel(
+        neurons_per_layer,
+        use_improved_sigmoid,
+        use_improved_weight_init)
+    trainer_improved_sigmoid = SoftmaxTrainer(
+        momentum_gamma, use_momentum,
+        model_improved_sigmoid, learning_rate, batch_size, shuffle_data,
+        X_train, Y_train, X_val, Y_val,
+    )
+    train_history_improved_sigmoid, val_history_improved_sigmoid = trainer_improved_sigmoid.train(
+        num_epochs)
+
+    # We reduce the learning rate when using momentum
+    use_momentum = True
+    learning_rate = 0.02
+
+    model_with_momentum = SoftmaxModel(
+        neurons_per_layer,
+        use_improved_sigmoid,
+        use_improved_weight_init)
+    trainer_with_momentum = SoftmaxTrainer(
+        momentum_gamma, use_momentum,
+        model_with_momentum, learning_rate, batch_size, shuffle_data,
+        X_train, Y_train, X_val, Y_val,
+    )
+    train_history_with_momentum, val_history_with_momentum = trainer_with_momentum.train(
+        num_epochs)
+
+    plt.figure(figsize=(20, 12))
+
+    # Plot training loss
+    ax = plt.subplot(1, 2, 1)
+    ax.set_title("Training loss")
     plt.ylim([0, .4])
-    plt.subplot(1, 2, 2)
-    plt.ylim([0.85, .95])
-    utils.plot_loss(val_history["accuracy"], "Task 2 Model")
+    utils.plot_loss(train_history["loss"], "Original",
+                    npoints_to_average=10, plot_variance=False)
+    utils.plot_loss(train_history_improved_weights["loss"],
+                    "Improved weight initalization", npoints_to_average=10, plot_variance=False)
+    utils.plot_loss(train_history_improved_sigmoid["loss"],
+                    "Improved sigmoid and improved weight initalization", npoints_to_average=10, plot_variance=False)
     utils.plot_loss(
-        val_history_no_shuffle["accuracy"], "Task 2 Model - No Dataset Shuffling")
-    plt.ylabel("Validation Accuracy")
+        train_history_with_momentum["loss"], "With momentum, improved sigmoid and improved weight initalization", npoints_to_average=10, plot_variance=False)
+    plt.xlabel("Number of Training Steps")
+    plt.ylabel("Cross Entropy Loss - Average")
     plt.legend()
+
+    # Plot validation loss
+    ax = plt.subplot(1, 2, 2)
+    ax.set_title("Validation loss")
+    plt.ylim([0, .4])
+    utils.plot_loss(val_history["loss"], "Original", plot_variance=False)
+    utils.plot_loss(val_history_improved_weights["loss"],
+                    "Improved weight initalization", plot_variance=False)
+    utils.plot_loss(val_history_improved_sigmoid["loss"],
+                    "Improved sigmoid and improved weight initalization", plot_variance=False)
+    utils.plot_loss(
+        val_history_with_momentum["loss"], "With momentum, improved sigmoid and improved weight initalization", plot_variance=False)
+    plt.xlabel("Number of Training Steps")
+    plt.ylabel("Cross Entropy Loss - Average")
+    plt.legend()
+
+    plt.savefig("task3_loss.png")
+    plt.show()
+
+    plt.figure(figsize=(20, 12))
+
+    # Plot training accuracy
+    ax = plt.subplot(1, 2, 1)
+    ax.set_title("Training accuracy")
+    plt.ylim([0.85, 1])
+    utils.plot_loss(train_history["accuracy"], "Original")
+    utils.plot_loss(
+        train_history_improved_weights["accuracy"], "Improved weight initalization")
+    utils.plot_loss(
+        train_history_improved_sigmoid["accuracy"], "Improved sigmoid and improved weight initalization")
+    utils.plot_loss(
+        train_history_with_momentum["accuracy"], "With momentum, improved sigmoid and improved weight initalization")
+    plt.xlabel("Number of Training Steps")
+    plt.ylabel("Accuracy")
+    plt.legend()
+
+    # Plot validation accuracy
+    ax = plt.subplot(1, 2, 2)
+    ax.set_title("Validation accuracy")
+    plt.ylim([0.85, 1])
+    utils.plot_loss(val_history["accuracy"], "Original")
+    utils.plot_loss(
+        val_history_improved_weights["accuracy"], "Improved weight initalization")
+    utils.plot_loss(
+        val_history_improved_sigmoid["accuracy"], "Improved sigmoid and improved weight initalization")
+    utils.plot_loss(
+        val_history_with_momentum["accuracy"], "With momentum, improved sigmoid and improved weight initalization")
+    plt.xlabel("Number of Training Steps")
+    plt.ylabel("Accuracy")
+    plt.legend()
+
+    plt.savefig("task3_accuracy.png")
     plt.show()
