@@ -1,7 +1,7 @@
 import pathlib
 import matplotlib.pyplot as plt
 import utils
-from torch import nn
+from torch import nn, flatten
 from dataloaders import load_cifar10
 from trainer import Trainer, compute_loss_and_accuracy
 
@@ -18,28 +18,50 @@ class ExampleModel(nn.Module):
                 num_classes: Number of classes we want to predict (10)
         """
         super().__init__()
-        # TODO: Implement this function (Task  2a)
-        num_filters = 32  # Set number of filters in first conv layer
         self.num_classes = num_classes
         # Define the convolutional layers
         self.feature_extractor = nn.Sequential(
             nn.Conv2d(
                 in_channels=image_channels,
-                out_channels=num_filters,
+                out_channels=32,
                 kernel_size=5,
                 stride=1,
                 padding=2
-            )
+            ),
+            nn.ReLU(),
+            nn.MaxPool2d(2, stride=2),
+            nn.Conv2d(
+                in_channels=32,
+                out_channels=64,
+                kernel_size=5,
+                stride=1,
+                padding=2
+            ),
+            nn.ReLU(),
+            nn.MaxPool2d(2, stride=2),
+            nn.Conv2d(
+                in_channels=64,
+                out_channels=128,
+                kernel_size=5,
+                stride=1,
+                padding=2
+            ),
+            nn.ReLU(),
+            nn.MaxPool2d(2, stride=2),
         )
-        # The output of feature_extractor will be [batch_size, num_filters, 16, 16]
-        self.num_output_features = 32*32*32
+
+        # The output of feature_extractor will be [batch_size, 128, 4, 4]
+        # 128 feature maps with 4x4 images, given 32x32 input images
+        self.num_output_features = 4*4*128
         # Initialize our last fully connected layer
         # Inputs all extracted features from the convolutional layers
         # Outputs num_classes predictions, 1 for each class.
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
         self.classifier = nn.Sequential(
-            nn.Linear(self.num_output_features, num_classes),
+            nn.Linear(self.num_output_features, 64),
+            nn.ReLU(),
+            nn.Linear(64, num_classes)
         )
 
     def forward(self, x):
@@ -48,9 +70,10 @@ class ExampleModel(nn.Module):
         Args:
             x: Input image, shape: [batch_size, 3, 32, 32]
         """
-        # TODO: Implement this function (Task  2a)
         batch_size = x.shape[0]
-        out = x
+        x = self.feature_extractor(x)  # (batch_size, 128, 4, 4)
+        x = flatten(x, start_dim=1)  # (batch_size, 128*4*4)
+        out = self.classifier(x)  # (batch_size, self.num_classes)
         expected_shape = (batch_size, self.num_classes)
         assert out.shape == (batch_size, self.num_classes),\
             f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
@@ -71,6 +94,8 @@ def create_plots(trainer: Trainer, name: str):
     plt.legend()
     plt.subplot(1, 2, 2)
     plt.title("Accuracy")
+    utils.plot_loss(
+        trainer.train_history["accuracy"], label="Training Accuracy")
     utils.plot_loss(
         trainer.validation_history["accuracy"], label="Validation Accuracy")
     plt.legend()

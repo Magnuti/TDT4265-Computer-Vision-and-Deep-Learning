@@ -21,19 +21,28 @@ def compute_loss_and_accuracy(
     Returns:
         [average_loss, accuracy]: both scalar.
     """
-    average_loss = 0
-    accuracy = 0
-    # TODO: Implement this function (Task  2a)
+    iterations = 0
+    cumulative_loss = 0
+    total_predictions = 0
+    correct_predictions = 0
     with torch.no_grad():
         for (X_batch, Y_batch) in dataloader:
+            batch_size = X_batch.shape[0]
             # Transfer images/labels to GPU VRAM, if possible
             X_batch = utils.to_cuda(X_batch)
             Y_batch = utils.to_cuda(Y_batch)
             # Forward pass the images through our model
             output_probs = model(X_batch)
+            cumulative_loss += loss_criterion(output_probs, Y_batch).item()
+            output_predictions = torch.argmax(output_probs, dim=1)
+            correct_predictions += torch.sum(output_predictions ==
+                                             Y_batch).item()
+            total_predictions += batch_size
+            iterations += 1
 
-            # Compute Loss and Accuracy
-
+    # Compute Loss and Accuracy
+    average_loss = cumulative_loss / iterations
+    accuracy = correct_predictions / total_predictions
     return average_loss, accuracy
 
 
@@ -92,9 +101,17 @@ class Trainer:
             Train, validation and test.
         """
         self.model.eval()
+        training_loss, training_acc = compute_loss_and_accuracy(
+            self.dataloader_train, self.model, self.loss_criterion
+        )
         validation_loss, validation_acc = compute_loss_and_accuracy(
             self.dataloader_val, self.model, self.loss_criterion
         )
+        testing_loss, testing_acc = compute_loss_and_accuracy(
+            self.dataloader_test, self.model, self.loss_criterion
+        )
+        self.train_history["loss"][self.global_step] = training_loss
+        self.train_history["accuracy"][self.global_step] = training_acc
         self.validation_history["loss"][self.global_step] = validation_loss
         self.validation_history["accuracy"][self.global_step] = validation_acc
         used_time = time.time() - self.start_time
@@ -102,8 +119,12 @@ class Trainer:
             f"Epoch: {self.epoch:>1}",
             f"Batches per seconds: {self.global_step / used_time:.2f}",
             f"Global step: {self.global_step:>6}",
+            f"Training Loss: {training_loss:.2f}",
             f"Validation Loss: {validation_loss:.2f}",
+            f"Testing Loss: {testing_loss:.2f}",
+            f"Training Accuracy: {training_acc:.3f}",
             f"Validation Accuracy: {validation_acc:.3f}",
+            f"Testing Accuracy: {testing_acc:.3f}",
             sep=", ")
         self.model.train()
 
@@ -142,7 +163,7 @@ class Trainer:
         Y_batch = utils.to_cuda(Y_batch)
 
         # Perform the forward pass
-        predictions = self.model(X_batch)
+        predictions = self.model(X_batch)  # Calls the forward() function
         # Compute the cross entropy loss for the batch
         loss = self.loss_criterion(predictions, Y_batch)
         # Backpropagation
