@@ -104,3 +104,24 @@ def plot_loss(loss_dict: dict, label: str = None, npoints_to_average=1, plot_var
         steps, np.array(mean_loss) -
         np.array(loss_std), np.array(mean_loss) + loss_std,
         alpha=.2, label=f"{label} variance over {npoints_to_average} steps")
+
+
+def create_plots(trainer, name: str):
+    plot_path = pathlib.Path("plots")
+    plot_path.mkdir(exist_ok=True)
+    # Save plots and show them
+    plt.figure(figsize=(20, 8))
+    plt.subplot(1, 2, 1)
+    plt.title("Cross Entropy Loss")
+    plot_loss(trainer.train_history["loss"],
+              label="Training loss", npoints_to_average=10)
+    plot_loss(trainer.validation_history["loss"], label="Validation loss")
+    plt.legend()
+    plt.subplot(1, 2, 2)
+    plt.title("Accuracy")
+    plot_loss(trainer.train_history["accuracy"], label="Training Accuracy")
+    plot_loss(
+        trainer.validation_history["accuracy"], label="Validation Accuracy")
+    plt.legend()
+    plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
+    plt.show()
