@@ -33,7 +33,7 @@ def torch_image_to_numpy(image: torch.Tensor):
     Args:
         image: shape=[3, height, width]
     Returns:
-        iamge: shape=[height, width, 3] in the range [0, 1]
+        image: shape=[height, width, 3] in the range [0, 1]
     """
     # Normalize to [0 - 1.0]
     image = image.detach().cpu()  # Transform image to CPU memory (if on GPU VRAM)
@@ -48,4 +48,42 @@ def torch_image_to_numpy(image: torch.Tensor):
     return image
 
 
+# Task 4b
+
 indices = [14, 26, 32, 49, 52]
+
+plt.figure(figsize=(20, 8))
+plt.tight_layout()
+for i, index in enumerate(indices):
+    plt.subplot(2, 5, i + 1)
+    activation_image = torch_image_to_numpy(activation[0, index, :, :])
+    plt.imshow(activation_image, cmap="gray")
+
+    plt.subplot(2, 5, i + 1 + 5)
+    weight_image = torch_image_to_numpy(
+        first_conv_layer.weight[index])  # RGB image
+    plt.imshow(weight_image)
+
+plt.savefig("plots/task4b.png")
+plt.show()
+
+# Task 4c
+
+# We drop the average pooling layer and the linear layer
+model_without_classification = torch.nn.Sequential(
+    *(list(model.children())[:-2]))
+
+activations_after_last_layer = model_without_classification(image)
+
+assert activations_after_last_layer.shape == (1, 512, 7, 7)
+
+# Visualizes the ten first filters from the last convolutional layer
+plt.figure(figsize=(22, 3))
+for i in range(10):
+    plt.subplot(1, 10, i + 1)
+    activation_image = torch_image_to_numpy(
+        activations_after_last_layer[0, i, :, :])
+    plt.imshow(activation_image, cmap="gray")
+
+plt.savefig("plots/task4c.png")
+plt.show()
