@@ -29,6 +29,8 @@ def to_cuda(elements):
         if type(elements) == tuple or type(elements) == list:
             return [x.cuda() for x in elements]
         return elements.cuda()
+    
+    print("WARNING: CUDA not running!")
     return elements
 
 

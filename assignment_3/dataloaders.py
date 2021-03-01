@@ -7,8 +7,8 @@ np.random.seed(0)
 
 
 def load_cifar10(batch_size: int, validation_fraction: float = 0.1,
-                 resizeSize=None, mean=(0.5, 0.5, 0.5), std=(.25, .25, .25)
-                 ) -> typing.List[torch.utils.data.DataLoader]:
+                 resizeSize=None, mean=(0.5, 0.5, 0.5), std=(.25, .25, .25),
+                 data_augmentation=False) -> typing.List[torch.utils.data.DataLoader]:
     transformations = [
         transforms.ToTensor(),
         transforms.Normalize(mean, std),
@@ -16,6 +16,9 @@ def load_cifar10(batch_size: int, validation_fraction: float = 0.1,
 
     if resizeSize:
         transformations.append(transforms.Resize(resizeSize))
+
+    if data_augmentation:
+        transformations.append(transforms.RandomHorizontalFlip())
 
     # Note that transform train will apply the same transform for
     # validation!
