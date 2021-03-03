@@ -7,6 +7,22 @@ from dataloaders import load_cifar10
 from trainer import Trainer, compute_loss_and_accuracy
 
 
+# (conv-relu-pool-batchnorm)
+def block(in_channels, out_channels):
+    return [
+        nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=3,
+            stride=1,
+            padding=1
+        ),
+        nn.ReLU(),
+        nn.MaxPool2d(2, stride=2),
+        nn.BatchNorm2d(out_channels)
+    ]
+
+
 class Model(nn.Module):
 
     def __init__(self,
@@ -22,36 +38,12 @@ class Model(nn.Module):
         self.num_classes = num_classes
         # Define the convolutional layers
         self.feature_extractor = nn.Sequential(
-            nn.Conv2d(
-                in_channels=image_channels,
-                out_channels=32,
-                kernel_size=5,
-                stride=1,
-                padding=2
-            ),
-            nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Conv2d(
-                in_channels=32,
-                out_channels=64,
-                kernel_size=5,
-                stride=1,
-                padding=2
-            ),
-            nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=128,
-                kernel_size=5,
-                stride=1,
-                padding=2
-            ),
-            nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
+            *block(3, 32),
+            *block(32, 64),
+            *block(64, 128),
         )
 
-        # The output of feature_extractor will be [batch_size, 128, 4, 4]
+        # The output of feature_extractor will be [batch_size, ?, ?, ?]
         # 128 feature maps with 4x4 images, given 32x32 input images
         self.num_output_features = 4*4*128
         # Initialize our last fully connected layer
@@ -60,7 +52,9 @@ class Model(nn.Module):
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
         self.classifier = nn.Sequential(
-            nn.Linear(self.num_output_features, 64),
+            nn.Linear(self.num_output_features, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
             nn.ReLU(),
             nn.Linear(64, num_classes)
         )
@@ -87,17 +81,60 @@ if __name__ == "__main__":
     utils.set_seed(0)
     epochs = 10
     batch_size = 64
-    learning_rate = 5e-2
+    learning_rate = 0.001
     early_stop_count = 4
-    dataloaders = load_cifar10(batch_size)
+    dataloaders = load_cifar10(batch_size, data_augmentation=False)
     model = Model(image_channels=3, num_classes=10)
-    trainer = Trainer(
+    trainer_with_adam = Trainer(
         batch_size,
         learning_rate,
         early_stop_count,
         epochs,
         model,
-        dataloaders
+        dataloaders,
+        optimizer="Adam"
     )
-    trainer.train()
-    utils.create_plots(trainer, "task3_model_2")
+    trainer_with_adam.train()
+
+    utils.set_seed(0)
+    dataloaders = load_cifar10(batch_size, data_augmentation=False)
+    model = Model(image_channels=3, num_classes=10)
+
+    trainer_without_adam = Trainer(
+        batch_size,
+        learning_rate,
+        early_stop_count,
+        epochs,
+        model,
+        dataloaders,
+        # optimizer="Adam"
+    )
+    trainer_without_adam.train()
+
+    plot_path = pathlib.Path("plots")
+    # Save plots and show them
+    plt.figure(figsize=(20, 8))
+    plt.subplot(1, 2, 1)
+    plt.title("Cross Entropy Loss")
+    utils.plot_loss(trainer_with_adam.train_history["loss"],
+                    label="Training loss with Adam", npoints_to_average=10)
+    utils.plot_loss(trainer_without_adam.train_history["loss"],
+                    label="Training loss without Adam", npoints_to_average=10)
+    utils.plot_loss(
+        trainer_with_adam.validation_history["loss"], label="Validation loss with Adam")
+    utils.plot_loss(
+        trainer_without_adam.validation_history["loss"], label="Validation loss without Adam")
+    plt.legend()
+    plt.subplot(1, 2, 2)
+    plt.title("Accuracy")
+    utils.plot_loss(
+        trainer_with_adam.train_history["accuracy"], label="Training Accuracy with Adam")
+    utils.plot_loss(
+        trainer_without_adam.train_history["accuracy"], label="Training Accuracy without Adam")
+    utils.plot_loss(
+        trainer_with_adam.validation_history["accuracy"], label="Validation Accuracy with Adam")
+    utils.plot_loss(
+        trainer_without_adam.validation_history["accuracy"], label="Validation Accuracy without Adam")
+    plt.legend()
+    plt.savefig(plot_path.joinpath("task3_model_2_plot.png"))
+    plt.show()
