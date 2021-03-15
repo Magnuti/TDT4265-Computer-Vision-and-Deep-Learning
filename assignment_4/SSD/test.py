@@ -19,8 +19,7 @@ def evaluation(cfg, ckpt):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='SSD Evaluation on VOC and COCO dataset.')
+    parser = argparse.ArgumentParser(description='SSD Evaluation on VOC and COCO dataset.')
     parser.add_argument(
         "config_file",
         default="",
@@ -34,8 +33,7 @@ def main():
         default=None,
         type=str,
     )
-    parser.add_argument("--output_dir", default="eval_results",
-                        type=str, help="The directory to store evaluation results.")
+    parser.add_argument("--output_dir", default="eval_results", type=str, help="The directory to store evaluation results.")
     parser.add_argument(
         "opts",
         help="Modify config options using the command-line",

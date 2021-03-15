@@ -13,8 +13,7 @@ class SSDBoxHead(nn.Module):
         super().__init__()
         self.cfg = cfg
         self.predictor = BoxPredictor(cfg)
-        self.loss_evaluator = MultiBoxLoss(
-            neg_pos_ratio=cfg.MODEL.NEG_POS_RATIO)
+        self.loss_evaluator = MultiBoxLoss(neg_pos_ratio=cfg.MODEL.NEG_POS_RATIO)
         self.post_processor = PostProcessor(cfg)
         self.priors = None
 
@@ -54,15 +53,13 @@ class BoxPredictor(nn.Module):
     """
     The class responsible for generating predictions for each prior
     """
-
     def __init__(self, cfg):
         super().__init__()
         self.cfg = cfg
         self.cls_headers = nn.ModuleList()
         self.reg_headers = nn.ModuleList()
         for level, (boxes_per_location, out_channels) in enumerate(
-            zip(cfg.MODEL.PRIORS.BOXES_PER_LOCATION,
-                cfg.MODEL.BACKBONE.OUT_CHANNELS)
+            zip(cfg.MODEL.PRIORS.BOXES_PER_LOCATION, cfg.MODEL.BACKBONE.OUT_CHANNELS)
         ):
             self.cls_headers.append(
                 self.cls_block(level, out_channels, boxes_per_location)

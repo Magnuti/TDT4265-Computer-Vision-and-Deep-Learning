@@ -29,8 +29,7 @@ def cache_url(url, model_dir=None, progress=True):
     """
     if model_dir is None:
         torch_home = os.path.expanduser(os.getenv("TORCH_HOME", "~/.torch"))
-        model_dir = os.getenv(
-            "TORCH_MODEL_ZOO", pathlib.Path(torch_home, "models"))
+        model_dir = os.getenv("TORCH_MODEL_ZOO", pathlib.Path(torch_home, "models"))
     model_dir.mkdir(exist_ok=True, parents=True)
     parts = urlparse(url)
     filename = pathlib.Path(parts.path).name

@@ -12,18 +12,23 @@ filename = [
     ["training_labels", "train-labels-idx1-ubyte.gz"],
     ["test_labels", "t10k-labels-idx1-ubyte.gz"]
 ]
+filename2url = {
+    "t10k-images-idx3-ubyte.gz": "https://folk.ntnu.no/haakohu/original_mnist/t10k-images-idx3-ubyte.gz",
+    "t10k-labels-idx1-ubyte.gz": "https://folk.ntnu.no/haakohu/original_mnist/t10k-labels-idx1-ubyte.gz",
+    "train-images-idx3-ubyte.gz": "https://folk.ntnu.no/haakohu/original_mnist/train-images-idx3-ubyte.gz",
+    "train-labels-idx1-ubyte.gz": "https://folk.ntnu.no/haakohu/original_mnist/train-labels-idx1-ubyte.gz"
+}
 SAVE_PATH = pathlib.Path("data/original_mnist")
 
 
 def download_mnist():
     SAVE_PATH.mkdir(exist_ok=True, parents=True)
-    base_url = "http://yann.lecun.com/exdb/mnist/"
     for name in filename:
         filepath = SAVE_PATH.joinpath(name[1])
         if filepath.is_file():
             continue
         print("Downloading "+name[1]+"...")
-        request.urlretrieve(base_url+name[1], filepath)
+        request.urlretrieve(filename2url[name[1]], filepath)[1]
 
 
 def extract_mnist():

@@ -13,7 +13,6 @@ class BasicModel(torch.nn.Module):
      shape(-1, output_channels[4], 1, 1)]
      where "output_channels" is the same as cfg.BACKBONE.OUT_CHANNELS
     """
-
     def __init__(self, cfg):
         super().__init__()
         output_channels = cfg.MODEL.BACKBONE.OUT_CHANNELS
@@ -41,3 +40,4 @@ class BasicModel(torch.nn.Module):
             assert feature.shape[1:] == expected_shape, \
                 f"Expected shape: {expected_shape}, got: {feature.shape[1:]} at output IDX: {idx}"
         return tuple(out_features)
+

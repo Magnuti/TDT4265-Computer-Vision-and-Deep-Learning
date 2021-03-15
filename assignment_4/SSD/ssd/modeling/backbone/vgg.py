@@ -3,8 +3,6 @@ import torch
 import torch.nn.functional as F
 
 # borrowed from https://github.com/amdegroot/ssd.pytorch/blob/master/ssd.py
-
-
 def add_vgg(cfg, batch_norm=False):
     layers = []
     in_channels = 3
@@ -36,8 +34,7 @@ def add_extras(cfg, i, size=300):
     for k, v in enumerate(cfg):
         if in_channels != 'S':
             if v == 'S':
-                layers += [nn.Conv2d(in_channels, cfg[k + 1],
-                                     kernel_size=(1, 3)[flag], stride=2, padding=1)]
+                layers += [nn.Conv2d(in_channels, cfg[k + 1], kernel_size=(1, 3)[flag], stride=2, padding=1)]
             else:
                 layers += [nn.Conv2d(in_channels, v, kernel_size=(1, 3)[flag])]
             flag = not flag
@@ -50,7 +47,7 @@ def add_extras(cfg, i, size=300):
 
 vgg_base = {
     tuple([300, 300]): [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'C', 512, 512, 512, 'M',
-                        512, 512, 512],
+            512, 512, 512],
 }
 extras_base = {
     tuple([300, 300]): [256, 'S', 512, 128, 'S', 256, 128, 256, 128, 256],
@@ -72,8 +69,7 @@ class L2Norm(nn.Module):
     def forward(self, x):
         norm = x.pow(2).sum(dim=1, keepdim=True).sqrt() + self.eps
         x = torch.div(x, norm)
-        out = self.weight.unsqueeze(0).unsqueeze(
-            2).unsqueeze(3).expand_as(x) * x
+        out = self.weight.unsqueeze(0).unsqueeze(2).unsqueeze(3).expand_as(x) * x
         return out
 
 
@@ -85,8 +81,7 @@ class VGG(nn.Module):
         extras_config = extras_base[tuple(size)]
 
         self.vgg = nn.ModuleList(add_vgg(vgg_config))
-        self.extras = nn.ModuleList(
-            add_extras(extras_config, i=1024, size=size))
+        self.extras = nn.ModuleList(add_extras(extras_config, i=1024, size=size))
         self.l2_norm = L2Norm(512, scale=20)
         self.reset_parameters()
 
@@ -117,3 +112,4 @@ class VGG(nn.Module):
                 features.append(x)
 
         return tuple(features)
+
