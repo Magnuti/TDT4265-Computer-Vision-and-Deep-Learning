@@ -2,15 +2,29 @@
 
 ## task 1a)
 
-Fill in image of hand-written notes which are easy to read, or latex equations here
+Insersection over union (IoU) measures how much two rectangles (bounding boxes) overlap. That is, we measure how much of the prediction overlaps with the ground truth. It is calculated by the formula $IoU=area of overlap / area of union$. If there is no overlap then IoU is 0, while if we have 100 % correct prediction the IoU is 1. The area of union is always >= than area of overlap. Union is both rectangles combined.
+
+![](images/task1a.png)
 
 ## task 1b)
 
-Fill in image of hand-written notes which are easy to read, or latex equations here
+$Precision = TP / (TP + FP)$
+
+$Recall = TP / (TP + FN)$
+
+- TP = true positive
+- FP = false positive
+- TN = true negative
+- FN = false negative
+
+A true positive is a correct prediction that an object is there, while a false positive is an incorrect prediction that an object is there (predicted that the object is there, when in reallity it is not).
 
 ## task 1c)
 
-Fill in task 1a image of hand-written notes which are easy to read, or latex equations here
+The mean average precision (mAP) is the average of the average precision (AP). Thus, it is the total average of the average, where the AP is calculated once for each class.
+
+![](images/task1c_1.png)
+![](images/task1c_2.png)
 
 # Task 2
 
