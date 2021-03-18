@@ -36,27 +36,40 @@ The mean average precision (mAP) is the average of the average precision (AP). T
 
 ### Task 3a)
 
-Fill in task 1a image of hand-written notes which are easy to read, or latex equations here
+From the SSD blog: "SSD uses **non-maximum suppression** to remove duplicate predictions pointing to the same object". Thus, the filtering operation is called non-maximum suppression.
 
 ### Task 3b)
 
-Fill in task 1a image of hand-written notes which are easy to read, or latex equations here
+**False**. "SSD uses lower resolution layers to detect larger scale objects. For example, the 4×4 feature maps are used for larger scale object". So, the deeper we go, the larger the detected objects are.
 
 ### Task 3c)
 
-Fill in task 1a image of hand-written notes which are easy to read, or latex equations here
+It uses different aspect ratios at the same location because it must detect different classes which have different aspect ratios. For example, a person is most likely tall and narrow, while a car is often shorter and wider, so if the bounding boxes have similar aspect ratios the model will not perform.
 
 ### Task 3d)
 
-Fill in task 1a image of hand-written notes which are easy to read, or latex equations here
+<!-- TODO -->
+
+<!-- In SSD, the boundary boxes are chosen manually, while YOLO uses k-means clustering on the training dataset to determine the default boundary boxes. -->
 
 ### Task 3e)
 
-Fill in task 1a image of hand-written notes which are easy to read, or latex equations here
+$38*38*6=8664$
+
+Each cell (anchor location) has 6 different anchors, and we have 38x38 such cells/anchor locations, resulting in 8664 anchor boxes for this feature map.
 
 ### Task 3f)
 
-Fill in task 1a image of hand-written notes which are easy to read, or latex equations here
+Following the reasoning from the task above calculate the number of anchor boxes for each feature map and sum them to get the total number of anchor boxes for the entire network.
+
+$38*38*6=8664$  
+$19*19*6=2166$  
+$10*10*6=600$  
+$5*5*6=150$  
+$3*3*6=54$  
+$1*1*6=6$
+
+$8664+2166+600+150+54+6=11640$ total anchor boxes.
 
 # Task 4
 
