@@ -30,6 +30,8 @@ The mean average precision (mAP) is the average of the average precision (AP). T
 
 ### Task 2f)
 
+![](task2/precision_recall_curve.png)
+
 # Task 3
 
 ### Task 3a)
