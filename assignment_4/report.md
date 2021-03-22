@@ -75,7 +75,11 @@ $8664+2166+600+150+54+6=11640$ total anchor boxes.
 
 ## Task 4b)
 
-FILL IN ANSWER.
+The screenshot is taken from the `plot_scalars.ipynb` notebook.
+
+![](images/task4b.png)
+
+mAP: 0.7575
 
 ## Task 4c)
 
