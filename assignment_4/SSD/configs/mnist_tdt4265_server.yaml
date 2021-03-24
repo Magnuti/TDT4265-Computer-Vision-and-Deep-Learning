@@ -1,19 +1,23 @@
 MODEL:
     NUM_CLASSES: 11
     BACKBONE:
-        NAME: 'basic'
+        NAME: "basic"
         PRETRAINED: False
         OUT_CHANNELS: [128, 256, 128, 128, 64, 64]
         INPUT_CHANNELS: 3
+    PRIORS:
+        MIN_SIZES: [[15, 15], [30, 30], [56, 56], [81, 81], [107, 107], [132, 132]] # Halfening of the default MIN_SIZES
 INPUT:
     IMAGE_SIZE: [300, 300]
 DATASETS:
     TRAIN: ("mnist_detection_train", "mnist_detection_val")
     TEST: ("mnist_detection_val", )
 SOLVER:
+    # Note that the optimizer is hard coded to Adam, may fix layer
     MAX_ITER: 6000
     GAMMA: 0.1
     BATCH_SIZE: 16
-    LR: 2e-3
-OUTPUT_DIR: 'outputs/basic'
+    LR: 5e-4
+
+OUTPUT_DIR: "outputs/basic"
 DATASET_DIR: "/work/datasets"

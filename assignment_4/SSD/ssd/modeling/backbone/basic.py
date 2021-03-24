@@ -24,12 +24,15 @@ class BasicModel(nn.Module):
         # Note that these layers must be saved to self variables because the cfg uses them
         self.block1 = nn.Sequential(
             nn.Conv2d(image_channels, 32, 3, padding=1),
+            nn.BatchNorm2d(32),
             nn.MaxPool2d(2, stride=2),
             nn.ReLU(),
             nn.Conv2d(32, 64, 3, padding=1),
+            nn.BatchNorm2d(64),
             nn.MaxPool2d(2, stride=2),
             nn.ReLU(),
             nn.Conv2d(64, 64, 3, padding=1),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.Conv2d(64, self.output_channels[0], 3, stride=2,  padding=1),
         )
@@ -37,36 +40,65 @@ class BasicModel(nn.Module):
         self.block2 = nn.Sequential(
             nn.ReLU(),
             nn.Conv2d(self.output_channels[0], 128, 3, padding=1),
+            nn.BatchNorm2d(128),
+
             nn.ReLU(),
-            nn.Conv2d(128, self.output_channels[1], 3, stride=2, padding=1)
+            nn.Conv2d(128, 128, 3, padding=1),
+            nn.BatchNorm2d(128),
+
+            nn.ReLU(),
+            nn.Conv2d(128, self.output_channels[1], 3, stride=2, padding=1),
         )
 
         self.block3 = nn.Sequential(
             nn.ReLU(),
             nn.Conv2d(self.output_channels[1], 256, 3, padding=1),
+            nn.BatchNorm2d(256),
             nn.ReLU(),
-            nn.Conv2d(256, self.output_channels[2], 3, stride=2, padding=1)
+
+            nn.Conv2d(256, 256, 3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+
+            nn.Conv2d(256, self.output_channels[2], 3, stride=2, padding=1),
         )
 
         self.block4 = nn.Sequential(
             nn.ReLU(),
             nn.Conv2d(self.output_channels[2], 128, 3, padding=1),
+            nn.BatchNorm2d(128),
             nn.ReLU(),
-            nn.Conv2d(128, self.output_channels[3], 3, stride=2, padding=1)
+
+            nn.Conv2d(128, 128, 3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+
+            nn.Conv2d(128, self.output_channels[3], 3, stride=2, padding=1),
         )
 
         self.block5 = nn.Sequential(
             nn.ReLU(),
             nn.Conv2d(self.output_channels[3], 128, 3, padding=1),
+            nn.BatchNorm2d(128),
+
             nn.ReLU(),
-            nn.Conv2d(128, self.output_channels[4], 3, stride=2, padding=1)
+            nn.Conv2d(128, 128, 3, padding=1),
+            nn.BatchNorm2d(128),
+
+            nn.ReLU(),
+            nn.Conv2d(128, self.output_channels[4], 3, stride=2, padding=1),
         )
 
         self.block6 = nn.Sequential(
             nn.ReLU(),
             nn.Conv2d(self.output_channels[4], 128, 3, padding=1),
+            nn.BatchNorm2d(128),
             nn.ReLU(),
-            nn.Conv2d(128, self.output_channels[5], 3, padding=0)
+            nn.Conv2d(128, 128, 3, padding=1),
+            nn.BatchNorm2d(128),
+
+            nn.ReLU(),
+            nn.Conv2d(128, self.output_channels[5], 3, padding=0),
         )
 
         self.output_feature_maps = [

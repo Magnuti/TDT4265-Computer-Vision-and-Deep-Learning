@@ -35,24 +35,32 @@ def start_train(cfg):
     model = SSDDetector(cfg)
     model = torch_utils.to_cuda(model)
 
-    optimizer = torch.optim.SGD(
+    # TODO take optimizer as cfg parameter instead
+    # optimizer = torch.optim.SGD(
+    #     model.parameters(),
+    #     lr=cfg.SOLVER.LR,
+    #     momentum=cfg.SOLVER.MOMENTUM,
+    #     weight_decay=cfg.SOLVER.WEIGHT_DECAY
+    # )
+
+    # I tried to run with lr and weight_decay set, but the default worked better
+    optimizer = torch.optim.Adam(
         model.parameters(),
         lr=cfg.SOLVER.LR,
-        momentum=cfg.SOLVER.MOMENTUM,
         weight_decay=cfg.SOLVER.WEIGHT_DECAY
     )
-
 
     arguments = {"iteration": 0}
     save_to_disk = True
     checkpointer = CheckPointer(
         model, optimizer, cfg.OUTPUT_DIR, save_to_disk, logger,
-        )
+    )
     extra_checkpoint_data = checkpointer.load()
     arguments.update(extra_checkpoint_data)
 
     max_iter = cfg.SOLVER.MAX_ITER
-    train_loader = make_data_loader(cfg, is_train=True, max_iter=max_iter, start_iter=arguments['iteration'])
+    train_loader = make_data_loader(
+        cfg, is_train=True, max_iter=max_iter, start_iter=arguments['iteration'])
 
     model = do_train(
         cfg, model, train_loader, optimizer,
@@ -61,7 +69,8 @@ def start_train(cfg):
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(description='Single Shot MultiBox Detector Training With PyTorch')
+    parser = argparse.ArgumentParser(
+        description='Single Shot MultiBox Detector Training With PyTorch')
     parser.add_argument(
         "config_file",
         default="",
