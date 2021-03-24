@@ -157,4 +157,32 @@ We see that many numbers are being correctly classified, but the model has some 
 
 ## Task 4f)
 
-FILL IN ANSWER.
+**mAP: 0.2435**
+
+aeroplane : 0.3053  
+bicycle : 0.1774  
+bird : 0.1329
+boat : 0.0597  
+bottle : 0.0227  
+bus : 0.3724  
+car : 0.5608  
+cat : 0.3317  
+chair : 0.1448  
+cow : 0.2448  
+diningtable : 0.1625  
+dog : 0.2355  
+horse : 0.3809  
+motorbike : 0.2398  
+person : 0.4567  
+pottedplant : 0.0072  
+sheep : 0.2654  
+sofa : 0.2384  
+train : 0.3096  
+tvmonitor : 0.2210
+
+![](images/task4f_plot.png)
+![](images/task4f_1.png)
+![](images/task4f_2.png)
+![](images/task4f_3.png)
+![](images/task4f_4.png)
+![](images/task4f_5.png)
